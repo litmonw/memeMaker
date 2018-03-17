@@ -27,24 +27,19 @@
     <div>
         <button id="clear-btn">清空画布</button>
     </div>
+    <div id="tmp-div"></div>
     <script>
 
-        // 这个方法用来储存每个圆圈对象
-        var Circle = function (x, y, radius, color) {
-            this.x = x;
-            this.y = y;
-            this.radius = radius;
-            this.color = color;
-            this.isSelected = false;
-        }
-
         // 储存每个文字对象
-        var Text = function (content, font, fillStyle, strokeStyle, lineWidth) {
+        var Text = function (content, fontSize, fontFamily, fillStyle, strokeStyle, lineWidth) {
             this.content = content;
-            this.font = font;
+            this.fontSize = fontSize;
+            this.fontFamily = fontFamily;
             this.fillStyle = fillStyle;
             this.strokeStyle = strokeStyle;
             this.lineWidth = lineWidth;
+            this.width;
+            this.height;
         }
 
         var Canvas = function (canvasId) {
@@ -81,7 +76,20 @@
 
             if (this.text != undefined) {
                 var text = this.text;
-                this.context.font = "36pt Impact"
+                // 确定文本宽高
+                var tmpDivElm = document.getElementById('tmp-div');
+                tmpDivElm.style['font'] = text.fontSize + ' ' + text.fontFamily;
+                // 使 line-height == fontsize
+                tmpDivElm.style['line-height'] = text.fontSize;
+                tmpDivElm.innerText = text.content;
+
+                // 确定
+                text.width = this.context.measureText(text.content).width;
+                text.height = text.fontSize;
+                
+                // 结束
+                
+                this.context.font = "36px" + " Impact"
                 this.context.fillStyle = text.fillStyle;
                 this.context.fillText(text.content, this.canvas.width / 2, 50);
                 this.context.strokeStyle = text.strokeStyle;
@@ -92,7 +100,7 @@
 
         Canvas.prototype.drawText = function (e) {
             var ctx = this.context;
-            var text = new Text(inputElm.value, '36pt Impact', 'white', 'black', '3');
+            var text = new Text(inputElm.value, '36px', 'Impact', 'white', 'black', '3');
             this.text = text;
 
             // 更新画布
