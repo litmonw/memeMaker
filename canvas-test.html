@@ -25,7 +25,6 @@
     </label>
     <input id="inputBtn" type="button" value="输入" />
     <div>
-        <button id="add-btn">添加圆圈</button>
         <button id="clear-btn">清空画布</button>
     </div>
     <script>
@@ -63,35 +62,15 @@
             this.text;
         }
 
-        Canvas.prototype.addRandomCircle = function () {
-            // 为圆圈计算一个随机大小和位置
-            var radius = randomFromTo(10, 60);
-            var x = randomFromTo(0, this.canvas.width);
-            var y = randomFromTo(0, this.canvas.height);
-
-            // 为圆圈计算一个随机颜色
-            var colors = ["green", "blue", "red", "yellow", "magenta", "orange", "brown", "purple", "pink"];
-            var color = colors[randomFromTo(0, 8)];
-
-            // 创建一个新圆圈
-            var circle = new Circle(x, y, radius, color);
-
-            // 把它保存在数组中
-            this.circles.push(circle);
-
-            // 重新绘制画布
-            this.drawCircles();
-        }
-
         Canvas.prototype.clearCanvas = function () {
             // 去除所有圆圈
             this.circles = [];
 
             // 重新绘制画布.
-            this.drawCircles();
+            this.drawCanvas();
         }
 
-        Canvas.prototype.drawCircles = function () {
+        Canvas.prototype.drawCanvas = function () {
             // 清除画布，准备绘制
             this.context.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -99,26 +78,6 @@
                 this.context.drawImage(this.image, 0, 0, this.canvas.width, this.canvas.height);
             }
             var circles = this.circles;
-            // 遍历所有圆圈
-            for (var i = 0; i < circles.length; i++) {
-                var circle = circles[i];
-
-                // 绘制圆圈
-                this.context.globalAlpha = 0.85;
-                this.context.beginPath();
-                this.context.arc(circle.x, circle.y, circle.radius, 0, Math.PI * 2);
-                this.context.fillStyle = circle.color;
-                this.context.strokeStyle = "blacxk";
-
-                if (circle.isSelected) {
-                    this.context.lineWidth = 5;
-                }
-                else {
-                    this.context.lineWidth = 1;
-                }
-                this.context.fill();
-                this.context.stroke();
-            }
 
             if (this.text != undefined) {
                 var text = this.text;
@@ -131,74 +90,13 @@
             }
         }
 
-        Canvas.prototype.canvasClick = function (e) {
-            var circles = this.circles;
-            var previousSelectedCircle = this.previousSelectedCircle;
-            // 取得画布上被单击的点 e.pageX 点击距离文档的距离 canvas.offsetLeft 画布距离有定位的父级元素（或 body）的距离
-            var clickX = e.pageX - canvas.offsetLeft;
-            var clickY = e.pageY - canvas.offsetTop;
-            // 查找被单击的圆圈
-            for (var i = circles.length - 1; i >= 0; i--) {
-                var circle = circles[i];
-                //使用勾股定理计算这个点与圆心之间的距离
-                var distanceFromCenter = Math.sqrt(Math.pow(circle.x - clickX, 2)
-                    + Math.pow(circle.y - clickY, 2))
-                // 判断这个点是否在圆圈中
-                if (distanceFromCenter <= circle.radius) {
-                    // 清除之前选择的圆圈
-                    if (previousSelectedCircle != null) this.previousSelectedCircle.isSelected = false;
-                    this.previousSelectedCircle = circle;
-
-                    //选择新圆圈
-                    circle.isSelected = true;
-
-                    // 使圆圈允许拖拽
-                    this.isDragging = true;
-
-                    //更新显示
-                    circleCanvas.drawCircles();
-
-                    //停止搜索
-                    return;
-                }
-            }
-        }
-
-        // Canvas.prototype.stopDragging = function () {
-        //     this.isDragging = false;
-        // }
-
-        // Canvas.prototype.dragCircle = function (e) {
-        //     var canvas = this.canvas;
-        //     // 判断圆圈是否开始拖拽
-        //     if (this.isDragging == true) {
-        //         // 判断拖拽对象是否存在
-        //         if (this.previousSelectedCircle != null) {
-        //             // 取得鼠标位置
-        //             var x = e.pageX - canvas.offsetLeft;
-        //             var y = e.pageY - canvas.offsetTop;
-
-        //             // 将圆圈移动到鼠标位置
-        //             this.previousSelectedCircle.x = x;
-        //             this.previousSelectedCircle.y = y;
-        //             // 更新画布
-        //             this.drawCircles();
-        //         }
-        //     }
-        // }
-
         Canvas.prototype.drawText = function (e) {
             var ctx = this.context;
-            // ctx.strokeStyle = '#33cc33';
-            // ctx.font = "36pt Impact";
-            // ctx.textAlign = "center";
-            // ctx.fillStyle = 'white';
-            // var text = inputElm.value;
             var text = new Text(inputElm.value, '36pt Impact', 'white', 'black', '3');
             this.text = text;
 
             // 更新画布
-            this.drawCircles();
+            this.drawCanvas();
 
             // x的位置位于文字左下角的位置
             // ctx.strokeText('王治文', 100, 50);
@@ -210,29 +108,10 @@
         }
 
         let circleCanvas = new Canvas("canvas");
-        // 绑定鼠标点击事件
-        // circleCanvas.canvas.addEventListener('mousedown', function (e) {
-        //     circleCanvas.canvasClick(e);
-        // });
-        // //
-        // circleCanvas.canvas.addEventListener('mouseup', function (e) {
-        //     circleCanvas.stopDragging(e);
-        // });
-
-        // circleCanvas.canvas.addEventListener('mouseout', function (e) {
-        //     circleCanvas.stopDragging(e);
-        // });
-
-        // circleCanvas.canvas.addEventListener('mousemove', function (e) {
-        //     circleCanvas.dragCircle(e);
-        // });
 
         let addBtnElm = document.getElementById('add-btn');
         let clearBtnElm = document.getElementById('clear-btn');
 
-        addBtnElm.addEventListener('click', function () {
-            circleCanvas.addRandomCircle();
-        })
         clearBtnElm.addEventListener('click', function () {
             circleCanvas.clearCanvas();
         })
