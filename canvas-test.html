@@ -15,7 +15,7 @@
 </head>
 
 <body>
-    <canvas id="canvas" width="400" height="300">
+    <canvas id="canvas" width="800" height="500">
     </canvas>
     <label for="selectFile">
         <input id="selectFile" name="selectFile" type="file" />
@@ -38,6 +38,8 @@
             this.fillStyle = fillStyle;
             this.strokeStyle = strokeStyle;
             this.lineWidth = lineWidth;
+            this.x = 200;
+            this.y = 40;
             this.width;
             this.height;
             this.isSelected = false;
@@ -50,7 +52,7 @@
             this.circles = [];
             // 上一个被选中的圆圈
             this.previousSelectedCircle;
-            // 圆圈拖拽状态
+            // 文字拖拽状态
             this.isDragging = false;
             // 背景图片
             this.image;
@@ -92,21 +94,21 @@
 
                 // 判断是否选中
                 if (text.isSelected) {
-                    this.context.strokeRect(this.canvas.width / 2, 40 - text.height, text.width, text.height);
+                    this.context.strokeRect(text.x, text.y - text.height, text.width, text.height);
                 }
 
                 this.context.font = "36px" + " Impact"
                 this.context.fillStyle = text.fillStyle;
-                this.context.fillText(text.content, this.canvas.width / 2, 40);
+                this.context.fillText(text.content, text.x, text.y);
                 this.context.strokeStyle = text.strokeStyle;
                 this.context.lineWidth = text.lineWidth;
-                this.context.strokeText(text.content, this.canvas.width / 2, 40);
+                this.context.strokeText(text.content, text.x, text.y);
             }
         }
 
         Canvas.prototype.drawText = function (e) {
-            var ctx = this.contex
-            var text = new Text(inputElm.value, '36px', 'Impact', 'white', 'black', '3');
+            var ctx = this.context;
+            var text = new Text(inputElm.value, '36px', 'Impact', 'white', 'black', '1');
             this.text = text;
 
             // 更新画布
@@ -114,6 +116,41 @@
 
             // x y的位置位于文字左下角的位置
             // ctx.strokeText('王治文', 100, 50);
+        }
+
+        Canvas.prototype.stopDragging = function (e) {
+            this.isDragging = false;
+        }
+
+        Canvas.prototype.dragText = function (e) {
+            var canvas = this.canvas;
+            // 判断圆圈是否开始拖拽
+            if (this.isDragging == true) {
+                // // 判断拖拽对象是否存在
+                // if (this.previousSelectedCircle != null) {
+                    // 取得鼠标位置
+                    var x = e.pageX - canvas.offsetLeft;
+                    var y = e.pageY - canvas.offsetTop;
+
+                    // 将文本移动到鼠标位置
+                    // 限制鼠标 + 文本 不能 > 最大 x
+                    if (x + this.text.width > this.canvas.width) {
+                        this.text.x = this.canvas.width - this.text.width;
+                    } else {
+                        this.text.x = x;
+                    }
+
+                    // 限制鼠标 + 文本 不能 < 最小 y
+                    if (y - this.text.height < 0 ) {
+                        this.text.y = this.text.height;
+                    } else {
+                        this.text.y = y;
+                    }
+
+                    // 更新画布
+                    this.drawCanvas();
+                // }
+            }
         }
 
         //在某个范围内生成随机数
@@ -156,25 +193,38 @@
         }
 
         Canvas.prototype.calculate = function (e) {
+            if (this.text == null) {
+                return false;
+            }
             // 确定在画布中的点击位置
             var clickX = e.pageX - canvas.offsetLeft;
             var clickY = e.pageY - canvas.offsetTop;
 
             // 计算点击与文字的距离 待测试 可能仍然存在问题
             var text = this.text;
-            console.log(text);
-            var textMinY = 40 - text.height;
-            var textMaxX = this.canvas.width / 2 + text.width;
+            // 文本的最小 Y 和 最大 X
+            var textMinY = text.y - text.height;
+            var textMaxX = text.x + text.width;
 
-            if (clickX > this.canvas.width / 2 && clickX < textMaxX && clickY > textMinY && clickY < 40) {
+            if (clickX > text.x && clickX < textMaxX && clickY > textMinY && clickY < text.y) {
                 text.isSelected = true;
+                this.isDragging = true;
             } else {
                 text.isSelected = false;
             }
 
-            //更新显示
+            //更新画布
             circleCanvas.drawCanvas();
         }
+
+        Canvas.prototype.resizeCanvas = function (imgWidth, imgHeight) {
+            // 800 500 需要定死，否则图片会越传越小
+            var ratio = Math.min(800 / imgWidth, 500 / imgHeight);
+            console.log(ratio);
+            this.canvas.width = imgWidth * ratio;
+            this.canvas.height = imgHeight * ratio;
+        }
+
         /* 文字输入 */
         let inputElm = document.getElementById('inputText');
         let inputbtnElm = document.getElementById('inputBtn');
@@ -199,6 +249,10 @@
                 var image = new Image();
                 image.onload = function () {
                     window.imageSrc = this;
+
+                    // 重置 Canvas 大小
+                    circleCanvas.resizeCanvas(image.width, image.height);
+
                     circleCanvas.redrawMeme(window.imageSrc, null, null);
                 }
 
@@ -213,7 +267,24 @@
         // 绑定鼠标按住事件
         circleCanvas.canvas.addEventListener('mousedown', function (e) {
             circleCanvas.calculate(e);
+            // console.log('mousedown');
         });
+
+        circleCanvas.canvas.addEventListener('mouseup', function (e) {
+            circleCanvas.stopDragging(e);
+            // console.log('mouseup');
+        });
+
+        circleCanvas.canvas.addEventListener('mouseout', function (e) {
+            circleCanvas.stopDragging(e);
+            // console.log('mouseout');
+        });
+
+        circleCanvas.canvas.addEventListener('mousemove', function (e) {
+            circleCanvas.dragText(e);
+            // console.log('mousemove');
+        });
+
         document.getElementById('selectFile').addEventListener('change', handleFileSelect, false);
     </script>
 </body>
