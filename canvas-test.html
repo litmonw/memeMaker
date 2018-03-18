@@ -40,6 +40,7 @@
             this.lineWidth = lineWidth;
             this.width;
             this.height;
+            this.isSelected = false;
         }
 
         var Canvas = function (canvasId) {
@@ -85,28 +86,33 @@
 
                 // 确定
                 text.width = this.context.measureText(text.content).width;
-                text.height = text.fontSize;
-                
+                text.height = parseInt(text.fontSize);
+
                 // 结束
-                
+
+                // 判断是否选中
+                if (text.isSelected) {
+                    this.context.strokeRect(this.canvas.width / 2, 40 - text.height, text.width, text.height);
+                }
+
                 this.context.font = "36px" + " Impact"
                 this.context.fillStyle = text.fillStyle;
-                this.context.fillText(text.content, this.canvas.width / 2, 50);
+                this.context.fillText(text.content, this.canvas.width / 2, 40);
                 this.context.strokeStyle = text.strokeStyle;
                 this.context.lineWidth = text.lineWidth;
-                this.context.strokeText(text.content, this.canvas.width / 2, 50);
+                this.context.strokeText(text.content, this.canvas.width / 2, 40);
             }
         }
 
         Canvas.prototype.drawText = function (e) {
-            var ctx = this.context;
+            var ctx = this.contex
             var text = new Text(inputElm.value, '36px', 'Impact', 'white', 'black', '3');
             this.text = text;
 
             // 更新画布
             this.drawCanvas();
 
-            // x的位置位于文字左下角的位置
+            // x y的位置位于文字左下角的位置
             // ctx.strokeText('王治文', 100, 50);
         }
 
@@ -131,25 +137,44 @@
             if (image != null)
                 ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 
-            // 文本属性
-            ctx.font = '30pt Impact';
-            ctx.textAlign = 'center';
-            ctx.strokeStyle = 'black';
-            ctx.lineWidth = 3;
-            ctx.fillStyle = 'white';
+            // // 文本属性
+            // ctx.font = '30pt Impact';
+            // ctx.textAlign = 'center';
+            // ctx.strokeStyle = 'black';
+            // ctx.lineWidth = 3;
+            // ctx.fillStyle = 'white';
 
-            if (topLine != null) {
-                ctx.fillText(topLine, canvas.width / 2, 40);
-                ctx.strokeText(topLine, canvas.width / 2, 40);
-            }
+            // if (topLine != null) {
+            //     ctx.fillText(topLine, canvas.width / 2, 0);
+            //     ctx.strokeText(topLine, canvas.width / 2, 0);
+            // }
 
-            if (bottomLine != null) {
-                ctx.fillText(bottomLine, canvas.width / 2, canvas.height - 20);
-                ctx.strokeText(bottomLine, canvas.width / 2, canvas.height - 20);
-            }
+            // if (bottomLine != null) {
+            //     ctx.fillText(bottomLine, canvas.width / 2, canvas.height - 20);
+            //     ctx.strokeText(bottomLine, canvas.width / 2, canvas.height - 20);
+            // }
         }
 
+        Canvas.prototype.calculate = function (e) {
+            // 确定在画布中的点击位置
+            var clickX = e.pageX - canvas.offsetLeft;
+            var clickY = e.pageY - canvas.offsetTop;
 
+            // 计算点击与文字的距离 待测试 可能仍然存在问题
+            var text = this.text;
+            console.log(text);
+            var textMinY = 40 - text.height;
+            var textMaxX = this.canvas.width / 2 + text.width;
+
+            if (clickX > this.canvas.width / 2 && clickX < textMaxX && clickY > textMinY && clickY < 40) {
+                text.isSelected = true;
+            } else {
+                text.isSelected = false;
+            }
+
+            //更新显示
+            circleCanvas.drawCanvas();
+        }
         /* 文字输入 */
         let inputElm = document.getElementById('inputText');
         let inputbtnElm = document.getElementById('inputBtn');
@@ -185,6 +210,10 @@
             reader.readAsDataURL(file);
         }
 
+        // 绑定鼠标按住事件
+        circleCanvas.canvas.addEventListener('mousedown', function (e) {
+            circleCanvas.calculate(e);
+        });
         document.getElementById('selectFile').addEventListener('change', handleFileSelect, false);
     </script>
 </body>
