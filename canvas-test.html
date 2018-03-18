@@ -7,33 +7,62 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Document</title>
     <style>
+        body {
+            margin: 0;
+        }
+
         canvas {
             cursor: pointer;
             border: 1px solid black;
+            display: block;
+        }
+
+        .container {
+            width: 800px;
+        }
+
+        canvas,.container {
+            margin: 0 auto;
         }
     </style>
 </head>
 
 <body>
-    <canvas id="canvas" width="800" height="500">
-    </canvas>
-    <label for="selectFile">
-        <input id="selectFile" name="selectFile" type="file" />
-    </label>
-    <label for="inputText">
-        <input id="inputText" name="inputText" type="text" value="请输入文字" />
-    </label>
-    <input id="inputBtn" type="button" value="输入" />
-    <div>
-        <button id="clear-btn">清空画布</button>
+    <div class="container">
+        <canvas id="canvas" width="800" height="500">
+        </canvas>
+        <div>
+            <p>第一步：选择文件</p>
+            <label for="selectFile">
+                <input id="selectFile" name="selectFile" type="file" />
+            </label>
+            <p>第二步：选择样式</p>
+            <label for="inputText">
+                <input id="inputText" name="inputText" type="text" value="请输入文字" />
+            </label>
+            <label for="fontsize"><input type="text" name="fontsize" id="fontsize" placeholder="请输入字体大小"></label>
+            <label for="fontFace">
+                选择字体
+                <select name="fontFace" id="fontFace">
+                    <option value="impmact" selected>Imapact</option>
+                    <option value="Comic Sans MS">Comic Sans MS</option>
+                    <option value="helvetica neue">helvetica neue</option>
+                    <option value="Papyrus">Papyrus</option>
+                    <option value="Garamond">Garamond</option>
+                </select>
+            </label>
+            <input id="inputBtn" type="button" value="生成" />
+            <button id="clear-btn">清空画布</button>
+        </div>
+        <div id="tmp-div"></div>
     </div>
-    <div id="tmp-div"></div>
+
     <script>
 
         // 储存每个文字对象
         var Text = function (content, fontSize, fontFamily, fillStyle, strokeStyle, lineWidth) {
             this.content = content;
-            this.fontSize = fontSize;
+            this.fontSize = fontSize || '12px';
             this.fontFamily = fontFamily;
             this.fillStyle = fillStyle;
             this.strokeStyle = strokeStyle;
@@ -62,7 +91,7 @@
 
         Canvas.prototype.clearCanvas = function () {
             // 去除所有圆圈
-            this.circles = [];
+            this.text = [];
 
             // 重新绘制画布.
             this.drawCanvas();
@@ -97,7 +126,7 @@
                     this.context.strokeRect(text.x, text.y - text.height, text.width, text.height);
                 }
 
-                this.context.font = "36px" + " Impact"
+                this.context.font = text.fontSize + ' ' + text.fontFamily;
                 this.context.fillStyle = text.fillStyle;
                 this.context.fillText(text.content, text.x, text.y);
                 this.context.strokeStyle = text.strokeStyle;
@@ -108,7 +137,7 @@
 
         Canvas.prototype.drawText = function (e) {
             var ctx = this.context;
-            var text = new Text(inputElm.value, '36px', 'Impact', 'white', 'black', '1');
+            var text = new Text(inputElm.value, fontsizeElm.value, fontFace.value, 'white', 'black', '1');
             this.text = text;
 
             // 更新画布
@@ -128,27 +157,27 @@
             if (this.isDragging == true) {
                 // // 判断拖拽对象是否存在
                 // if (this.previousSelectedCircle != null) {
-                    // 取得鼠标位置
-                    var x = e.pageX - canvas.offsetLeft;
-                    var y = e.pageY - canvas.offsetTop;
+                // 取得鼠标位置
+                var x = e.pageX - canvas.offsetLeft;
+                var y = e.pageY - canvas.offsetTop;
 
-                    // 将文本移动到鼠标位置
-                    // 限制鼠标 + 文本 不能 > 最大 x
-                    if (x + this.text.width > this.canvas.width) {
-                        this.text.x = this.canvas.width - this.text.width;
-                    } else {
-                        this.text.x = x;
-                    }
+                // 将文本移动到鼠标位置
+                // 限制鼠标 + 文本 不能 > 最大 x
+                if (x + this.text.width > this.canvas.width) {
+                    this.text.x = this.canvas.width - this.text.width;
+                } else {
+                    this.text.x = x;
+                }
 
-                    // 限制鼠标 + 文本 不能 < 最小 y
-                    if (y - this.text.height < 0 ) {
-                        this.text.y = this.text.height;
-                    } else {
-                        this.text.y = y;
-                    }
+                // 限制鼠标 + 文本 不能 < 最小 y
+                if (y - this.text.height < 0) {
+                    this.text.y = this.text.height;
+                } else {
+                    this.text.y = y;
+                }
 
-                    // 更新画布
-                    this.drawCanvas();
+                // 更新画布
+                this.drawCanvas();
                 // }
             }
         }
@@ -228,6 +257,11 @@
         /* 文字输入 */
         let inputElm = document.getElementById('inputText');
         let inputbtnElm = document.getElementById('inputBtn');
+        // 文本大小
+        let fontsizeElm = document.getElementById('fontsize');
+        // 文字字体
+        let fontFaceElm = document.getElementById('fontFace');
+        // 生成样式
         inputbtnElm.addEventListener('click', function (e) {
             circleCanvas.drawText(e);
         })
