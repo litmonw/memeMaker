@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="css/main.css">
+    <title>表情包生成器</title>
+</head>
+
+<body>
+    <div class="container">
+        <canvas id="canvas" width="800" height="500">
+        </canvas>
+        <div>
+            <p>第一步：选择文件</p>
+            <label for="selectFile">
+                <input id="selectFile" name="selectFile" type="file" />
+            </label>
+            <p>第二步：选择样式</p>
+            <label for="inputText">
+                <input id="inputText" name="inputText" type="text" placeholder="请输入文字" />
+            </label>
+            <label for="fontsize">
+                字体大小
+                <input type="range" min="1" max="100" defaultValue="30" name="fontsize" id="fontsize" />
+            </label>
+            <label for="fontFace">
+                选择字体
+                <select name="fontFace" id="fontFace">
+                    <option value="Microsoft Yahei" selected>微软雅黑</option>
+                    <option value="SimSun">宋体</option>
+                    <option value="STXihei">华文细黑</option>
+                    <option value="PingFang SC">苹方</option>
+                    <option value="impmact">Imapact</option>
+                    <option value="Comic Sans MS">Comic Sans MS</option>
+                    <option value="helvetica neue">helvetica neue</option>
+                    <option value="Papyrus">Papyrus</option>
+                    <option value="Garamond">Garamond</option>
+                </select>
+            </label>
+            <label for="fontColor">
+                填充颜色
+                <input type="color" value="#ffffff" name="fontColor" id="fontColor" />
+            </label>
+            <label for="fontBorderColor">
+                描边颜色
+                <input type="color" value="#000000" name="fontBorderColor" id="fontBorderColor" />
+            </label>
+            <label for="fontBorderColor">
+                描边线宽
+                <input type="range" min="0" max="5" defaultValue="1" name="lineWidth" id="lineWidth" />
+            </label>
+            <input id="inputBtn" type="button" value="生成" />
+            <button id="clear-btn">清空画布</button>
+        </div>
+        <div id="tmp-div"></div>
+    </div>
+    <script src="js/main.js"></script>
+
+</body>
+
+</html>

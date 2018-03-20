@@ -1,0 +1,21 @@
+body {
+    margin: 0;
+}
+
+canvas {
+    cursor: pointer;
+    border: 1px solid black;
+    display: block;
+}
+
+.container {
+    width: 800px;
+}
+
+canvas,.container {
+    margin: 0 auto;
+}
+
+#tmp-div {
+    display: none;
+}
