@@ -21,7 +21,7 @@ Canvas.prototype.clearCanvas = function () {
 }
 
 Canvas.prototype.drawCanvas = function () {
-    // 清除画布，准备绘制 存在问题
+    // 清除画布，准备绘制
     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
     // 绘制背景图
@@ -29,54 +29,58 @@ Canvas.prototype.drawCanvas = function () {
         this.context.drawImage(this.image, 0, 0, this.canvas.width, this.canvas.height);
     }
 
-    // 更改图片高度 图片样式
-    if (this.text != null) {
+    // 判断 Canvas 是否存在文本
+    if (this.text == null) {
+        // 新建文本
+        this.drawText();
+        return false;
+    } else {
+        // 更新文本
         this.text.fontSize = fontsizeElm.value;
         this.text.fontFace = fontFaceElm.value;
         this.text.fillStyle = fontColorElm.value;
         this.text.strokeStyle = fontBorderColorElm.value;
         this.text.lineWidth = lineWidthElm.value;
+        this.text.content = inputElm.value;
     }
 
-    if (this.text != undefined) {
-        var text = this.text;
-        // 确定文本宽高
-        var tmpDivElm = document.getElementById('tmp-div');
-        tmpDivElm.style['font'] = text.fontSize + 'pt' + ' ' + text.fontFace;
-        // 使 line-height == fontsize
-        tmpDivElm.style['line-height'] = text.fontSize + 'pt';
-        tmpDivElm.innerText = text.content;
+    var text = this.text;
+    // 确定文本宽高
+    var tmpDivElm = document.getElementById('tmp-div');
+    tmpDivElm.style['font'] = text.fontSize + 'pt' + ' ' + text.fontFace;
+    // 使 line-height == fontsize
+    tmpDivElm.style['line-height'] = text.fontSize + 'pt';
+    tmpDivElm.innerText = text.content;
 
-        // 确定
-        text.width = this.context.measureText(text.content).width;
-        text.height = parseInt(text.fontSize);
+    // 确定
+    text.width = this.context.measureText(text.content).width;
+    text.height = parseInt(text.fontSize);
 
-        // 结束
+    // 结束
 
-        // 判断是否选中
-        if (text.isSelected) {
-            // 为选中边框设置虚线样式 暂存之前线宽状态
-            this.context.save();
-            this.context.setLineDash([5, 10]);
-            this.context.strokeStyle = '#f36';
-            this.context.strokeRect(text.x, text.y - text.height, text.width, text.height);
-            // 选中边框绘制完成，恢复已暂存的线宽状态，避免对其他图形绘制造成干扰
-            this.context.restore();
-        }
+    // 判断是否选中
+    if (text.isSelected) {
+        // 为选中边框设置虚线样式 暂存之前线宽状态
+        this.context.save();
+        this.context.setLineDash([5, 10]);
+        this.context.strokeStyle = '#f36';
+        this.context.strokeRect(text.x, text.y - text.height, text.width, text.height);
+        // 选中边框绘制完成，恢复已暂存的线宽状态，避免对其他图形绘制造成干扰
+        this.context.restore();
+    }
 
-        this.context.font = text.fontSize + 'pt' + ' ' + text.fontFace;
-        this.context.fillStyle = text.fillStyle;
-        this.context.fillText(text.content, text.x, text.y);
-        this.context.strokeStyle = text.strokeStyle;
-        // 手动设置当描边线宽为 0 时，取消描边 <- lineWidth 宽度 为 0 等值时会忽略
-        if (text.lineWidth != 0) {
-            this.context.lineWidth = text.lineWidth;
-            this.context.strokeText(text.content, text.x, text.y);
-        }
+    this.context.font = text.fontSize + 'pt' + ' ' + text.fontFace;
+    this.context.fillStyle = text.fillStyle;
+    this.context.fillText(text.content, text.x, text.y);
+    this.context.strokeStyle = text.strokeStyle;
+    // 手动设置当描边线宽为 0 时，取消描边 <- lineWidth 宽度 为 0 等值时会忽略
+    if (text.lineWidth != 0) {
+        this.context.lineWidth = text.lineWidth;
+        this.context.strokeText(text.content, text.x, text.y);
     }
 }
 
-Canvas.prototype.drawText = function (e) {
+Canvas.prototype.drawText = function () {
     var ctx = this.context;
     var text = new Text(inputElm.value, fontsizeElm.value, fontFace.value, 'white', 'black', '1', Math.random());
     this.text = text;
@@ -190,7 +194,10 @@ Canvas.prototype.resizeCanvas = function (imgWidth, imgHeight) {
 
 /* 文字输入 */
 let inputElm = document.getElementById('inputText');
-let inputbtnElm = document.getElementById('inputBtn');
+inputElm.addEventListener('input', function (e) {
+    circleCanvas.drawCanvas();
+})
+
 // 文本大小
 let fontsizeElm = document.getElementById('fontsize');
 fontsizeElm.addEventListener('input', function (e) {
@@ -220,11 +227,6 @@ lineWidthElm.addEventListener('input', function (e) {
     console.log(lineWidthElm.value);
     circleCanvas.drawCanvas();
 
-})
-
-// 生成样式
-inputbtnElm.addEventListener('click', function (e) {
-    circleCanvas.drawText(e);
 })
 
 /* 选择文件 */
