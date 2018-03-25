@@ -23,7 +23,6 @@ Canvas.prototype.clearCanvas = function () {
 Canvas.prototype.drawCanvas = function () {
     // 清除画布，准备绘制
     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
     // 绘制背景图
     if (this.image != undefined) {
         this.context.drawImage(this.image, 0, 0, this.canvas.width, this.canvas.height);
@@ -155,6 +154,9 @@ var Text = function (content, fontSize, fontFace, fillStyle, strokeStyle, lineWi
     this.clickYtoBottom;
 }
 
+/**
+ * 文本区域是否可以向上移动
+ */
 Text.prototype.canMoveUp = function () {
     if (this.y - this.height < 0) {
         return true;
@@ -162,14 +164,20 @@ Text.prototype.canMoveUp = function () {
     return false;
 };
 
+/**
+ * 文本区域是否可以向右移动
+ */
 Text.prototype.canMoveRight = function (canvas) {
-    console.log(canvas);
+
     if (this.x + this.width > canvas.width) {
         return true;
     }
     return false;
 };
 
+/**
+ * 文本区域是否可以向下移动
+ */
 Text.prototype.canMoveDown = function (canvas) {
     if (this.y > canvas.height) {
         return true;
@@ -177,6 +185,9 @@ Text.prototype.canMoveDown = function (canvas) {
     return false;
 };
 
+/**
+ * 文本区域是否可以向左移动
+ */
 Text.prototype.canMoveLeft = function () {
     if (this.x <= 0) {
         return true;
@@ -206,27 +217,24 @@ Canvas.prototype.redrawMeme = function (image, topLine, bottomLine) {
         ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 }
 
-Canvas.prototype.calculate = function (e) {
+Canvas.prototype.clickInCanvas = function (e) {
     if (this.text == null) {
         return false;
     }
-    // 确定在画布中的点击位置
-    var clickX = e.pageX - canvas.offsetLeft;
-    var clickY = e.pageY - canvas.offsetTop;
 
-    // 计算点击与文字的距离 待测试 可能仍然存在问题
+    // 获取 鼠标位置,文本区域位置
+    var pos = this.calculateDistance(e);
+
     var text = this.text;
-    // 文本的最小 Y 和 最大 X
-    var textMinY = text.y - text.height;
-    var textMaxX = text.x + text.width;
 
-    // 判断点击是否进入了文本区域
-    if (this.isEnterRange(clickX, clickY, textMinY, textMaxX, text)) {
+    // 判断点击了文本区域
+    if (this.isEnterRange(pos.mouseX, pos.mouseY, pos.textMinY, pos.textMaxX, text)) {
         text.isSelected = true;
         this.isDragging = true;
+
         // 加入点击区域距离 text.x text.y 的距离
-        this.text.clickXtoleft = clickX - text.x;
-        this.text.clickYtoBottom = text.y - clickY;
+        this.text.clickXtoleft = pos.mouseX - text.x;
+        this.text.clickYtoBottom = text.y - pos.mouseY;
     } else {
         text.isSelected = false;
     }
@@ -236,6 +244,46 @@ Canvas.prototype.calculate = function (e) {
 }
 
 /**
+ * 计算文字区域与鼠标指针所在的位置
+ * @param {event} e 鼠标事件
+ * @returns {obejct} 返回鼠标位置,文本区域位置
+ */
+Canvas.prototype.calculateDistance = function (e){
+    var canvas = this.canvas;
+    var text = this.text;
+
+    // 确定鼠标指针在画布中的位置
+    var mouseX = e.pageX - canvas.offsetLeft;
+    var mouseY = e.pageY - canvas.offsetTop;
+
+    // 文本的最小 Y 和 最大 X
+    var textMinY = text.y - text.height;
+    var textMaxX = text.x + text.width;
+
+    return {
+        'mouseX': mouseX,
+        'mouseY': mouseY,
+        'textMinY': textMinY,
+        'textMaxX': textMaxX
+    };
+};
+
+Canvas.prototype.moveInCanvas = function (e) {
+    if (this.text == null) {
+        return false;
+    }
+
+    // 获取 鼠标位置,文本区域位置
+    var pos = this.calculateDistance(e);
+
+    var text = this.text;
+    if (this.isEnterRange(pos.mouseX, pos.mouseY, pos.textMinY, pos.textMaxX, text)) {
+        this.canvas.style.cursor = 'move';
+    } else {
+        this.canvas.style.cursor = 'default';
+    }
+}
+/**
  * 
  * @param {int} clickX 鼠标在画布中的 X 坐标点击位置
  * @param {int} clickY 鼠标在画布中的 Y 坐标点击位置
@@ -244,12 +292,18 @@ Canvas.prototype.calculate = function (e) {
  * @param {text} text text 对象
  */
 Canvas.prototype.isEnterRange = function (clickX, clickY, textMinY, textMaxX, text) {
+    // 如果鼠标位置满足条件则返回 true
     if (clickX > text.x && clickX < textMaxX && clickY > textMinY && clickY < text.y) {
         return true;
     }
     return false;
 };
 
+/**
+ * 
+ * @param {int} imgWidth 图片宽度
+ * @param {int} imgHeight 图片高度
+ */
 Canvas.prototype.resizeCanvas = function (imgWidth, imgHeight) {
     // 800 500 需要定死，否则图片会越传越小
     var ratio = Math.min(800 / imgWidth, 500 / imgHeight);
@@ -328,7 +382,7 @@ function handleFileSelect(evt) {
 
 // 绑定鼠标按住事件
 circleCanvas.canvas.addEventListener('mousedown', function (e) {
-    circleCanvas.calculate(e);
+    circleCanvas.clickInCanvas(e);
 });
 
 circleCanvas.canvas.addEventListener('mouseup', function (e) {
@@ -340,7 +394,11 @@ circleCanvas.canvas.addEventListener('mouseout', function (e) {
 });
 
 circleCanvas.canvas.addEventListener('mousemove', function (e) {
+    // 设置鼠标指针为默认状态
+    this.style.cursor = 'default';
+    // 判断鼠标是否进入了文本区域
     circleCanvas.dragText(e);
+    circleCanvas.moveInCanvas(e);
 });
 
 document.getElementById('selectFile').addEventListener('change', handleFileSelect, false);
