@@ -95,30 +95,45 @@ Canvas.prototype.stopDragging = function (e) {
 
 Canvas.prototype.dragText = function (e) {
     var canvas = this.canvas;
+    var text = this.text;
     if (this.isDragging == true) {
-        // // 判断拖拽对象是否存在
-        // if (this.previousSelectedCircle != null) {
-        // 取得鼠标位置
-        var x = e.pageX - canvas.offsetLeft;
-        var y = e.pageY - canvas.offsetTop;
+        // 判断拖拽对象是否存在
+        if (text != null) {
+            // 取得鼠标位置
+            var clickX = e.pageX - canvas.offsetLeft;
+            var clickY = e.pageY - canvas.offsetTop;
 
-        // 将文本移动到鼠标位置
-        // 限制鼠标 + 文本 不能 > 最大 x
-        if (x + this.text.width > this.canvas.width) {
-            this.text.x = this.canvas.width - this.text.width;
-        } else {
-            this.text.x = x;
+            // 将文本移动到鼠标位置
+            text.x = clickX - text.clickXtoleft;
+            text.y = clickY + text.clickYtoBottom;
+
+            // 判断文本是否超出上边界
+            if (text.canMoveUp(canvas)) {
+                // 当超出边界时，重置文本为上边界位置
+                text.y = text.height;
+            }
+
+            // 判断文本是否超出右边界
+            if (text.canMoveRight(canvas)) {
+                // 当超出边界时，重置文本为右边界位置
+                text.x = canvas.width - text.width;
+            }
+
+            // 判断文本是否超出下边界
+            if (text.canMoveDown(canvas)) {
+                // 当超出边界时，重置文本为下边界位置
+                text.y = canvas.height;
+            }
+            
+            // 判断文本是否超出左边界
+            if (text.canMoveLeft(canvas)) {
+                // 当超出边界时，重置文本为左边界位置
+                text.x = 0;
+            }
+
+            // 更新画布
+            this.drawCanvas();
         }
-
-        // 限制鼠标 + 文本 不能 < 最小 y
-        if (y - this.text.height < 0) {
-            this.text.y = this.text.height;
-        } else {
-            this.text.y = y;
-        }
-
-        // 更新画布
-        this.drawCanvas();
     }
 }
 
@@ -131,12 +146,43 @@ var Text = function (content, fontSize, fontFace, fillStyle, strokeStyle, lineWi
     this.strokeStyle = strokeStyle;
     this.lineWidth = lineWidth;
     this.x = 200;
-    this.y = 40;
+    this.y = 400;
     this.width;
     this.height;
     this.isSelected = false;
     this.id = random;
+    this.clickXtoleft;
+    this.clickYtoBottom;
 }
+
+Text.prototype.canMoveUp = function () {
+    if (this.y - this.height < 0) {
+        return true;
+    }
+    return false;
+};
+
+Text.prototype.canMoveRight = function (canvas) {
+    console.log(canvas);
+    if (this.x + this.width > canvas.width) {
+        return true;
+    }
+    return false;
+};
+
+Text.prototype.canMoveDown = function (canvas) {
+    if (this.y > canvas.height) {
+        return true;
+    }
+    return false;
+};
+
+Text.prototype.canMoveLeft = function () {
+    if (this.x <= 0) {
+        return true;
+    }
+    return false;
+};
 
 //在某个范围内生成随机数
 function randomFromTo(from, to) {
@@ -174,9 +220,13 @@ Canvas.prototype.calculate = function (e) {
     var textMinY = text.y - text.height;
     var textMaxX = text.x + text.width;
 
-    if (clickX > text.x && clickX < textMaxX && clickY > textMinY && clickY < text.y) {
+    // 判断点击是否进入了文本区域
+    if (this.isEnterRange(clickX, clickY, textMinY, textMaxX, text)) {
         text.isSelected = true;
         this.isDragging = true;
+        // 加入点击区域距离 text.x text.y 的距离
+        this.text.clickXtoleft = clickX - text.x;
+        this.text.clickYtoBottom = text.y - clickY;
     } else {
         text.isSelected = false;
     }
@@ -184,6 +234,21 @@ Canvas.prototype.calculate = function (e) {
     //更新画布
     circleCanvas.drawCanvas();
 }
+
+/**
+ * 
+ * @param {int} clickX 鼠标在画布中的 X 坐标点击位置
+ * @param {int} clickY 鼠标在画布中的 Y 坐标点击位置
+ * @param {int} textMinY 文本在画布中的最小 Y 坐标位置
+ * @param {int} textMaxX 文本在画布中的最大 X 坐标位置
+ * @param {text} text text 对象
+ */
+Canvas.prototype.isEnterRange = function (clickX, clickY, textMinY, textMaxX, text) {
+    if (clickX > text.x && clickX < textMaxX && clickY > textMinY && clickY < text.y) {
+        return true;
+    }
+    return false;
+};
 
 Canvas.prototype.resizeCanvas = function (imgWidth, imgHeight) {
     // 800 500 需要定死，否则图片会越传越小
@@ -196,7 +261,7 @@ Canvas.prototype.resizeCanvas = function (imgWidth, imgHeight) {
 let inputElm = document.getElementById('inputText');
 inputElm.addEventListener('input', function (e) {
     circleCanvas.drawCanvas();
-})
+});
 
 // 文本大小
 let fontsizeElm = document.getElementById('fontsize');
